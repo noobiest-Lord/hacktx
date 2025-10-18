@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import { localVehicles } from "../data/vehicleData"; 
+import { localVehicles } from "../data/vehicleData";
 
 const getEstimatedPayment = (price) => {
     const downPayment = price * 0.1;
@@ -34,6 +34,79 @@ const TabsTrigger = ({ value, onValueChange, value: triggerValue, children }) =>
         {children}
     </button>
 );
+
+const VehicleCard = ({ vehicle, index }) => {
+    const [selectedTrim, setSelectedTrim] = useState(vehicle.trims[0]);
+
+    const handleTrimChange = (event) => {
+        const trimName = event.target.value;
+        const newTrim = vehicle.trims.find(t => t.name === trimName);
+        setSelectedTrim(newTrim);
+    };
+
+    return (
+        <motion.div
+            key={vehicle.id}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 + index * 0.05 }}
+            className="vehicle-card"
+        >
+            {vehicle.image_url && (
+                <div className="card-image-container">
+                    <img
+                        src={vehicle.image_url}
+                        alt={vehicle.model}
+                        className="card-image"
+                    />
+                    <div className="card-badge year-badge">
+                        {vehicle.year}
+                    </div>
+                </div>
+            )}
+
+            <div className="card-header">
+                <div className="card-header-top">
+                    <div>
+                        <h3 className="card-model">{vehicle.model}</h3>
+                        <select onChange={handleTrimChange} value={selectedTrim.name} className="trim-select">
+                            {vehicle.trims.map(trim => (
+                                <option key={trim.name} value={trim.name}>{trim.name}</option>
+                            ))}
+                        </select>
+                    </div>
+                    <span className="card-badge category-badge">
+                        {vehicle.category}
+                    </span>
+                </div>
+
+                <div className="card-details">
+                    {selectedTrim.mpg_city && (
+                        <div className="card-detail-item">
+                            <span>{selectedTrim.mpg_city}/{selectedTrim.mpg_highway} MPG</span>
+                        </div>
+                    )}
+                </div>
+
+                <div className="card-pricing">
+                    <p className="card-pricing-label">Starting MSRP</p>
+                    <p className="card-msrp">
+                        ${selectedTrim.msrp.toLocaleString()}
+                    </p>
+                    <p className="card-est-payment">
+                        Est. ${getEstimatedPayment(selectedTrim.msrp).toFixed(0)}/mo
+                    </p>
+                </div>
+            </div>
+
+            <div className="card-content">
+                <button className="calculate-button">
+                    Calculate Payments
+                </button>
+            </div>
+        </motion.div>
+    );
+};
 
 export default function Vehicles() {
     const [selectedCategory, setSelectedCategory] = useState('all');
@@ -72,70 +145,14 @@ export default function Vehicles() {
                             <TabsTrigger value="suv">SUVs</TabsTrigger>
                             <TabsTrigger value="truck">Trucks</TabsTrigger>
                             <TabsTrigger value="hybrid">Hybrids</TabsTrigger>
+                            <TabsTrigger value="electric">Electric</TabsTrigger>
                         </TabsList>
                     </Tabs>
                 </motion.div>
 
                 <div className="vehicles-grid">
                     {filteredVehicles.map((vehicle, index) => (
-                        <motion.div
-                            key={vehicle.id}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.2 + index * 0.05 }}
-                            className="vehicle-card"
-                        >
-                            {vehicle.image_url && (
-                                <div className="card-image-container">
-                                    <img
-                                        src={vehicle.image_url}
-                                        alt={vehicle.model}
-                                        className="card-image"
-                                    />
-                                    <div className="card-badge year-badge">
-                                        {vehicle.year}
-                                    </div>
-                                </div>
-                            )}
-
-                            <div className="card-header">
-                                <div className="card-header-top">
-                                    <div>
-                                        <h3 className="card-model">{vehicle.model}</h3>
-                                        {vehicle.trim && (
-                                            <p className="card-trim">{vehicle.trim}</p>
-                                        )}
-                                    </div>
-                                    <span className="card-badge category-badge">
-                                        {vehicle.category}
-                                    </span>
-                                </div>
-
-                                <div className="card-details">
-                                    {vehicle.mpg_city && (
-                                        <div className="card-detail-item">
-                                            <span>{vehicle.mpg_city}/{vehicle.mpg_highway} MPG</span>
-                                        </div>
-                                    )}
-                                </div>
-
-                                <div className="card-pricing">
-                                    <p className="card-pricing-label">Starting MSRP</p>
-                                    <p className="card-msrp">
-                                        ${vehicle.msrp.toLocaleString()}
-                                    </p>
-                                    <p className="card-est-payment">
-                                        Est. ${getEstimatedPayment(vehicle.msrp).toFixed(0)}/mo
-                                    </p>
-                                </div>
-                            </div>
-
-                            <div className="card-content">
-                                <button className="calculate-button">
-                                    Calculate Payments
-                                </button>
-                            </div>
-                        </motion.div>
+                        <VehicleCard key={vehicle.id} vehicle={vehicle} index={index} />
                     ))}
                 </div>
 
